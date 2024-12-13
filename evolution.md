@@ -127,7 +127,149 @@
 </project>
 ```
 
-## （2）Java21特性
+## （2）Java JDK发展历史
+
+最重要及广泛影响的特性有：
+Java8 -> Optional、Lambda
+Java11 -> Var类型、HttpClient
+Java17 -> 封闭类
+Java21 -> 虚拟线程、模式匹配
+
+### 1. Java8 新特性
+
+#### 1. Optional 
+
+##### **1.1 Optional 创建**
+
+- `Optional.of(value)`：非空值
+- `Optional.empty()`：空值
+- `Optional.ofNullable(value)`：可空值
+
+##### **1.2 Mybatis 配合 Optional**
+
+- 配置映射：返回 `Optional<Type>` 类型
+
+- 示例：
+
+  ```
+  Optional<User> user = userMapper.findById(id);
+  ```
+
+##### **1.3 方法返回 Optional**
+
+- 返回类型：
+
+  ```
+  public Optional<User> findById(int id) {  
+    return Optional.ofNullable(userMapper.findById(id));
+  }
+  ```
+
+##### **1.4  `map()` 与 `flatMap()`**
+
+- map()：转换值
+
+```
+Optional<User> user = Optional.ofNullable(userService.findUser());
+Optional<String> name = user.map(u -> u.getName());
+```
+
+- flatMap()：扁平化值
+
+```
+Optional<Address> address = Optional.ofNullable(user)
+                                    .flatMap(u -> Optional.ofNullable(u.getAddress()));
+```
+
+##### **1.5 ` ifPresent()` 和 `orElse()`**
+
+- ifPresent()：
+
+```
+Optional<User> user = Optional.ofNullable(userService.findUser());
+user.ifPresent(u -> System.out.println(u.getName()));
+```
+
+- orElse()：
+
+```
+String name = user.orElse(new User("Default")).getName();
+```
+
+##### **1.6 ` filter()`**
+
+- 条件过滤：
+
+```
+Optional<User> user = Optional.ofNullable(userService.findUser());
+user.filter(u -> u.getAge() > 18).ifPresent(u -> System.out.println(u.getName()));
+```
+
+##### **1.7  `orElseThrow()`**
+
+- 抛出异常：
+
+```
+User user = Optional.ofNullable(userService.findUser())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+```
+
+#### 2. Lambda 表达式
+
+Lambda 表达式是 Java 8 最具标志性的特性之一，它允许你用更简洁的方式传递行为，即将代码作为参数传递。这使得函数式编程模式得以在 Java 中实现，代码更加简洁和易于理解。
+
+示例：
+
+```
+List<String> names = Arrays.asList("Alice", "Bob", "Charlie");
+names.forEach(name -> System.out.println(name));
+```
+
+Lambda 表达式可以用于处理集合、流、事件处理等场景，它极大地提高了代码的可读性和简洁性。
+
+### 2. Java11 新特性
+
+#### 1. **`var` 引用类型推断的改进**
+
+可以使用 `var` 来简化代码，特别是在不需要显式指定类型时。
+
+```
+var list = new ArrayList<String>();
+list.add("Hello");
+```
+
+#### 2. **`HttpClient` API (标准化)**
+
+新的 `HttpClient` 提供了更现代的 HTTP/2 支持，支持异步和同步请求，以及更简洁的 API。
+
+```
+HttpClient client = HttpClient.newHttpClient();
+HttpRequest request = HttpRequest.newBuilder(URI.create("https://api.example.com"))
+        .build();
+HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+System.out.println(response.body());
+```
+
+### 3. Java17 新特性
+
+Java 17 是一个 **长期支持版本（LTS）**，因此它引入了许多更为成熟和重要的新特性，很多特性在后续版本中也得到了强化和完善。它是目前许多企业选择的稳定版本。
+
+#### 1. **封闭类和封闭接口（Sealed Classes, JEP 409）**
+
+Java 17 引入了 **封闭类（Sealed Classes）**，这允许开发者更精确地控制哪些类可以继承或实现该类/接口。通过封闭类，开发者可以指定一个类的子类的集合，增强了类型安全性，并且可以更好地管理继承层次。
+
+```
+public sealed class Shape
+    permits Circle, Rectangle { }
+
+public final class Circle extends Shape { ... }
+
+public final class Rectangle extends Shape { ... }
+```
+
+这种方式提供了更强的控制，并且使得类型推断和模式匹配变得更加精确。
+
+### 4. Java21 新特性
 
 Java 21 是 Oracle 发布的最新版本，作为长期支持（LTS）版本，它包含了许多新特性和改进。以下是 Java 21 主要的新特性和增强功能：
 
@@ -145,20 +287,7 @@ Thread.startVirtualThread(() -> {
 });
 ```
 
-### 2. **项目 Panama：改进的 JNI（Java Native Interface）**
-
-Java 21 在 **项目 Panama** 上做了改进，提升了 Java 与本地代码（如 C 或 C++）交互的能力。
-
-- 这使得开发人员能够更容易地与操作系统或现有的本地代码库进行交互。
-- 改进后的 JNI 提供了更高效和简化的方式来调用本地方法和访问本地内存。
-
-### 3. **项目 Valhalla：值类型的增强**
-
-Java 21 对 **项目 Valhalla** 进行了增强，支持 **值类型（Value Types）**，这是 Java 的一项非常重要的长期改进，目的是提高性能并减少内存开销。值类型是与传统对象不同的一种类型，它们是不可变的并且没有额外的内存开销。
-
-- 值类型可以减少在内存中的对象实例化和垃圾回收开销，因此适合于高效的数值计算和小数据类型的使用。
-
-### 4. **增强的 Pattern Matching（模式匹配）**
+### 2. **增强的 Pattern Matching（模式匹配）**
 
 Java 21 增强了 **模式匹配**，尤其是在 `switch` 表达式和 `instanceof` 操作符中。模式匹配可以让开发者以更简洁、更安全的方式进行类型检查和解构。
 
@@ -182,7 +311,7 @@ if (obj instanceof String s) {
 }
 ```
 
-### 5. **`Record` 类型的改进**
+### 3. **`Record` 类型的改进**
 
 Java 21 对 **`record` 类型**（Java 14 引入的特性）进行了改进，允许开发者更加灵活地定义和使用记录类。
 
@@ -195,48 +324,7 @@ public record Person(String name, int age) implements Cloneable {
 }
 ```
 
-### 6. **结构化并行任务的增强**
-
-Java 21 引入了对并行任务处理的进一步支持，使得在多核机器上能够更高效地进行计算密集型任务的处理。
-
-- 这项增强使得 Java 可以更好地与现代硬件进行配合，利用多核 CPU 实现更高效的并行执行。
-
-### 7. **新版本的 `Foreign Function & Memory API`（外部函数和内存 API）**
-
-Java 21 引入了进一步的改进，使得 Java 可以更好地与本地代码进行交互。这包括：
-
-- 增强的 **外部函数 API**，允许直接调用外部函数。
-- **内存访问 API**，让 Java 程序能够直接操作本地内存，从而避免了传统的 JNI 的一些限制。
-
-### 8. **增强的 Garbage Collection（垃圾回收）**
-
-Java 21 提升了垃圾回收机制，特别是在 **G1 垃圾回收器** 和 **ZGC（Z Garbage Collector）** 上进行了优化。
-
-- **G1 垃圾回收器** 进行了性能改进，能够更好地支持多核处理器和大规模内存环境。
-- **ZGC** 是一种低延迟垃圾回收器，适用于高吞吐量和低延迟要求的应用，Java 21 在 ZGC 上做了增强，使得垃圾回收过程更加高效。
-
-### 9. **新 API：`String` 和 `Array` 操作的增强**
-
-Java 21 为 **`String`** 和 **`Array`** 提供了一些新方法，使得字符串和数组的操作更为简洁和高效。
-
-- 增强的 **`String`** 操作：支持更多的字符串处理方法，简化了开发者的工作。
-- **`Array`** 提供了新的方法来方便数组的操作，比如创建、修改、填充数组等。
-
-### 10. **其他语言和 JVM 的改进**
-
-- **`JEP 429: Scoped Values`**：引入了作用域值，这有助于更好地控制并发程序中变量的作用域和生命周期。
-- **`JEP 432: Record Patterns`**：支持在模式匹配中对记录类型进行解构，简化代码并提升可读性。
-- **增强的 `JVM` 性能**：Java 21 对 JVM 性能进行了多方面的优化，提升了启动速度、内存占用和整体性能。
-
-### 11. **增强的 `Sequenced Collections`**
-
-Java 21 引入了对 **顺序集合**（Sequenced Collections）的支持，新的集合类型使得在处理有顺序的集合时更加方便和高效。
-
-### 12. **增强的 `jpackage`**
-
-**`jpackage`** 是 Java 提供的一个打包工具，允许开发者将 Java 应用打包成平台特定的可执行文件（如 `.exe`, `.dmg`, `.deb` 等）。Java 21 继续增强了 `jpackage`，支持更多的配置选项和更好的打包过程。
-
-## （3）Mybatis 3.0以上的te
+## （3）Mybatis 3.0以上特性
 
 是的，MyBatis 3.0 引入了一个非常重要的特性——通过 **注解** 代替传统的 XML 映射文件来管理 SQL 查询。这意味着开发者可以完全不依赖 XML 文件，在 Java 接口中直接使用注解来定义 SQL 语句和映射关系，从而使得 MyBatis 的配置更加简洁、直观，并且不需要额外的 XML 文件。
 
@@ -426,85 +514,6 @@ public class Application {
 - **灵活性差**：对于复杂的 SQL 语句和映射，注解的方式可能会变得冗长，且难以维护。
 - **难以调试**：动态生成的 SQL 语句可能较难调试，尤其是涉及复杂逻辑时。
 - **不支持所有 XML 特性**：一些高级特性（如动态 SQL、映射文件中复杂的 SQL 片段）在注解方式中实现起来较为困难。
-
-## （4）Java8 新特性
-
-### 1. Optional 配合Mybatis
-
-#### **1.1 Optional 创建**
-
-- `Optional.of(value)`：非空值
-- `Optional.empty()`：空值
-- `Optional.ofNullable(value)`：可空值
-
-#### **1.2 Mybatis 配合 Optional**
-
-- 配置映射：返回 `Optional<Type>` 类型
-
-- 示例：
-
-  ```
-  Optional<User> user = userMapper.findById(id);
-  ```
-
-#### **1.3 方法返回 Optional**
-
-- 返回类型：
-
-  ```
-  public Optional<User> findById(int id) {  
-    return Optional.ofNullable(userMapper.findById(id));
-  }
-  ```
-
-#### **1.4  `map()` 与 `flatMap()`**
-
-- map()：转换值
-
-```
-Optional<User> user = Optional.ofNullable(userService.findUser());
-Optional<String> name = user.map(u -> u.getName());
-```
-
-- flatMap()：扁平化值
-
-```
-Optional<Address> address = Optional.ofNullable(user)
-                                    .flatMap(u -> Optional.ofNullable(u.getAddress()));
-```
-
-#### **1.5 ` ifPresent()` 和 `orElse()`**
-
-- ifPresent()：
-
-```
-Optional<User> user = Optional.ofNullable(userService.findUser());
-user.ifPresent(u -> System.out.println(u.getName()));
-```
-
-- orElse()：
-
-```
-String name = user.orElse(new User("Default")).getName();
-```
-
-#### **1.6 ` filter()`**
-
-- 条件过滤：
-
-```
-Optional<User> user = Optional.ofNullable(userService.findUser());
-user.filter(u -> u.getAge() > 18).ifPresent(u -> System.out.println(u.getName()));
-```
-
-#### **1.7  `orElseThrow()`**
-
-- 抛出异常：
-
-```
-User user = Optional.ofNullable(userService.findUser())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-```
 
 ## （5）Eureka 配置
 
